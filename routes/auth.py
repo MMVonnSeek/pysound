@@ -3,18 +3,20 @@ from flask_jwt_extended import create_access_token
 from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, User
 
-auth_bp = Blueprint('auth',__name__)
+auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
 
-    #Validação básica
-    if not data or not all(k in data for k in['username','email','password']):
+    # Validação básica
+    if not data or not all(k in data for k in ['username', 'email', 'password']):
         return jsonify({"error": "Campos obrigatórios: username, email, password"}), 400
-    #Verificar se o usuário já existe
+
+    # Verifica se usuário já existe
     if User.query.filter_by(email=data['email']).first():
-        return jsonify({"error": "E-mail já cadastrado"}), 409
+        return jsonify({"error": "Email já cadastrado"}), 409
+
     # Cria o usuário com senha criptografada
     user = User(
         username=data['username'],
@@ -26,7 +28,8 @@ def register():
 
     return jsonify({"message": "Usuário criado!", "user": user.to_dict()}), 201
 
-@auth_bp.route('login', methods=['POST'])
+
+@auth_bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
 
@@ -34,9 +37,9 @@ def login():
 
     if not user or not check_password_hash(user.password, data.get('password', '')):
         return jsonify({"error": "Credenciais inválidas"}), 401
-    
-    #Gera o token JWT
-    token = create_access_token(identify=str(user.id))
+
+    # Gera o token JWT
+    token = create_access_token(identity=str(user.id))
 
     return jsonify({
         "message": "Login realizado!",

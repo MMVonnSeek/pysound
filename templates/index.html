@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎵 PySound — API Tester</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:      #0a0a0f;
+    --surface: #111118;
+    --card:    #18181f;
+    --border:  #2a2a38;
+    --accent:  #1db954;
+    --accent2: #ff4d6d;
+    --text:    #e8e8f0;
+    --muted:   #6b6b80;
+    --mono:    'Space Mono', monospace;
+    --sans:    'Syne', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  /* ── HEADER ── */
+  header {
+    grid-column: 1 / -1;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    font-size: 1.4rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+  }
+  .logo span { color: var(--accent); }
+
+  .badge {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    background: var(--accent);
+    color: #000;
+    padding: 2px 8px;
+    border-radius: 99px;
+    font-weight: 700;
+  }
+
+  .token-display {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--muted);
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .token-display.active { color: var(--accent); }
+
+  /* ── SIDEBAR ── */
+  nav {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 1.5rem 0;
+    overflow-y: auto;
+  }
+
+  .nav-section {
+    padding: 0.5rem 1.5rem;
+    font-size: 0.65rem;
+    font-family: var(--mono);
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-top: 1rem;
+  }
+
+  nav button {
+    width: 100%;
+    background: none;
+    border: none;
+    color: var(--muted);
+    padding: 0.7rem 1.5rem;
+    text-align: left;
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: 0.9rem;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  nav button:hover, nav button.active {
+    color: var(--text);
+    background: rgba(255,255,255,0.04);
+  }
+
+  nav button.active { color: var(--accent); border-left: 2px solid var(--accent); }
+
+  .icon {
+    width: 18px;
+    text-align: center;
+    font-size: 1rem;
+  }
+
+  /* ── MAIN ── */
+  main {
+    overflow-y: auto;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .page { display: none; flex-direction: column; gap: 1.5rem; }
+  .page.active { display: flex; }
+
+  h2 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+  }
+
+  h2 small {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    font-weight: 400;
+    color: var(--muted);
+    margin-left: 0.75rem;
+  }
+
+  /* ── CARDS / FORMS ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+  }
+
+  .card-title {
+    font-size: 0.75rem;
+    font-family: var(--mono);
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .method {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 4px;
+  }
+  .get    { background: #1a3a5c; color: #4fc3f7; }
+  .post   { background: #1a3d2b; color: var(--accent); }
+  .delete { background: #3d1a1a; color: var(--accent2); }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  label {
+    font-size: 0.72rem;
+    font-family: var(--mono);
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  input, select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    padding: 0.55rem 0.75rem;
+    transition: border-color 0.15s;
+    outline: none;
+  }
+
+  input:focus, select:focus { border-color: var(--accent); }
+
+  .btn {
+    padding: 0.6rem 1.4rem;
+    border-radius: 6px;
+    border: none;
+    font-family: var(--sans);
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-primary { background: var(--accent); color: #000; }
+  .btn-primary:hover { background: #1ed760; transform: translateY(-1px); }
+  .btn-danger  { background: var(--accent2); color: #fff; }
+  .btn-danger:hover  { opacity: 0.85; }
+  .btn-ghost   { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .btn-ghost:hover  { border-color: var(--accent); color: var(--accent); }
+
+  /* ── RESPONSE ── */
+  .response-box {
+    background: #0d0d14;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    padding: 1rem;
+    max-height: 260px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: #9be9a8;
+    margin-top: 0.75rem;
+    line-height: 1.6;
+  }
+
+  .response-box.error { color: #ff7b7b; }
+
+  .status-pill {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 99px;
+    font-weight: 700;
+  }
+
+  .status-ok  { background: rgba(29,185,84,0.15); color: var(--accent); }
+  .status-err { background: rgba(255,77,109,0.15); color: var(--accent2); }
+
+  /* ── SONG LIST ── */
+  .song-list { display: flex; flex-direction: column; gap: 0.5rem; }
+
+  .song-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.85rem 1rem;
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.15s;
+  }
+
+  .song-item:hover { border-color: var(--accent); background: rgba(29,185,84,0.04); }
+
+  .song-num {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--muted);
+    width: 20px;
+    text-align: center;
+  }
+
+  .song-info h4 { font-size: 0.9rem; font-weight: 600; }
+  .song-info p  { font-size: 0.75rem; color: var(--muted); font-family: var(--mono); }
+
+  .song-genre {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    padding: 2px 8px;
+    border-radius: 99px;
+    background: rgba(255,255,255,0.06);
+    color: var(--muted);
+  }
+
+  .song-dur {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  /* ── GRID STATS ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+  }
+
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem;
+    text-align: center;
+  }
+
+  .stat-num {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 0.4rem;
+  }
+
+  /* ── ENDPOINT TABLE ── */
+  .endpoint-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+  }
+
+  .endpoint-table th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .endpoint-table td {
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    font-family: var(--mono);
+    font-size: 0.8rem;
+  }
+
+  .endpoint-table tr:last-child td { border-bottom: none; }
+  .endpoint-table .route { color: #c9d1d9; }
+  .endpoint-table .desc  { color: var(--muted); font-size: 0.75rem; }
+  .endpoint-table .auth  { color: #f0c070; font-size: 0.7rem; }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Py<span>Sound</span></div>
+  <span class="badge">API v1.0</span>
+  <span class="badge" style="background:#ff4d6d">SENAI Taguatinga</span>
+  <div class="token-display" id="tokenDisplay">🔓 Não autenticado</div>
+</header>
+
+<nav>
+  <div class="nav-section">Navegação</div>
+  <button class="active" onclick="showPage('dashboard')">
+    <span class="icon">🏠</span> Dashboard
+  </button>
+  <button onclick="showPage('auth')">
+    <span class="icon">🔐</span> Autenticação
+  </button>
+  <button onclick="showPage('songs')">
+    <span class="icon">🎵</span> Músicas
+  </button>
+  <button onclick="showPage('playlists')">
+    <span class="icon">📂</span> Playlists
+  </button>
+  <div class="nav-section">Referência</div>
+  <button onclick="showPage('docs')">
+    <span class="icon">📋</span> Endpoints
+  </button>
+</nav>
+
+<main>
+
+  <!-- ══ DASHBOARD ══ -->
+  <div class="page active" id="page-dashboard">
+    <h2>Dashboard <small>PySound API</small></h2>
+
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card">
+        <div class="stat-num" id="statSongs">—</div>
+        <div class="stat-label">Músicas</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statPlaylists">—</div>
+        <div class="stat-label">Playlists</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statStatus">🟡</div>
+        <div class="stat-label">API Status</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="method get">GET</span> /songs — Últimas músicas</div>
+      <div class="song-list" id="dashSongList">
+        <div style="color:var(--muted);font-size:0.8rem;font-family:var(--mono)">Carregando...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ AUTH ══ -->
+  <div class="page" id="page-auth">
+    <h2>Autenticação <small>JWT</small></h2>
+
+    <div class="card">
+      <div class="card-title"><span class="method post">POST</span> /auth/register — Criar conta</div>
+      <div class="form-row">
+        <div class="field"><label>Username</label><input id="reg_user" placeholder="joao_silva"></div>
+        <div class="field"><label>Email</label><input id="reg_email" placeholder="joao@email.com"></div>
+        <div class="field"><label>Senha</label><input id="reg_pass" type="password" placeholder="••••••"></div>
+      </div>
+      <button class="btn btn-primary" onclick="register()">Criar conta</button>
+      <div id="reg_response" class="response-box" style="display:none"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="method post">POST</span> /auth/login — Fazer login</div>
+      <div class="form-row">
+        <div class="field"><label>Email</label><input id="login_email" placeholder="admin@pysound.com" value="admin@pysound.com"></div>
+        <div class="field"><label>Senha</label><input id="login_pass" type="password" placeholder="••••••" value="123456"></div>
+      </div>
+      <div style="display:flex;gap:0.75rem;align-items:center">
+        <button class="btn btn-primary" onclick="login()">Login</button>
+        <button class="btn btn-ghost" onclick="logout()">Logout</button>
+      </div>
+      <div id="login_response" class="response-box" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- ══ SONGS ══ -->
+  <div class="page" id="page-songs">
+    <h2>Músicas <small>CRUD</small></h2>
+
+    <div class="card">
+      <div class="card-title"><span class="method get">GET</span> /songs — Listar / Buscar</div>
+      <div class="form-row">
+        <div class="field"><label>Busca (q)</label><input id="search_q" placeholder="Bohemian..."></div>
+        <div class="field"><label>Gênero</label><input id="search_genre" placeholder="Rock"></div>
+        <div class="field"><label>Artista</label><input id="search_artist" placeholder="Queen"></div>
+      </div>
+      <button class="btn btn-primary" onclick="searchSongs()">Buscar</button>
+      <div id="songs_list" class="song-list" style="margin-top:1rem"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="method post">POST</span> /songs — Adicionar música 🔒</div>
+      <div class="form-row">
+        <div class="field"><label>Título *</label><input id="song_title" placeholder="Nome da música"></div>
+        <div class="field"><label>Artista *</label><input id="song_artist" placeholder="Nome do artista"></div>
+        <div class="field"><label>Álbum</label><input id="song_album" placeholder="Nome do álbum"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Gênero</label><input id="song_genre" placeholder="Rock, MPB, Sertanejo..."></div>
+        <div class="field"><label>Duração (seg)</label><input id="song_duration" type="number" placeholder="240"></div>
+        <div class="field"><label>URL</label><input id="song_url" placeholder="https://..."></div>
+      </div>
+      <button class="btn btn-primary" onclick="addSong()">Adicionar</button>
+      <div id="add_song_response" class="response-box" style="display:none"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="method delete">DELETE</span> /songs/:id — Remover música 🔒</div>
+      <div class="form-row">
+        <div class="field"><label>ID da música</label><input id="del_song_id" type="number" placeholder="1"></div>
+      </div>
+      <button class="btn btn-danger" onclick="deleteSong()">Remover</button>
+      <div id="del_song_response" class="response-box" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- ══ PLAYLISTS ══ -->
+  <div class="page" id="page-playlists">
+    <h2>Playlists <small>CRUD</small></h2>
+
+    <div class="card">
+      <div class="card-title"><span class="method get">GET</span> /playlists — Listar todas</div>
+      <button class="btn btn-primary" onclick="getPlaylists()">Buscar Playlists</button>
+      <div id="playlists_list" style="margin-top:1rem"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="method post">POST</span> /playlists — Criar playlist 🔒</div>
+      <div class="form-row">
+        <div class="field"><label>Nome *</label><input id="pl_name" placeholder="Minha playlist"></div>
+        <div class="field"><label>Descrição</label><input id="pl_desc" placeholder="Músicas favoritas..."></div>
+      </div>
+      <button class="btn btn-primary" onclick="createPlaylist()">Criar</button>
+      <div id="create_pl_response" class="response-box" style="display:none"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="method post">POST</span> /playlists/:id/songs — Adicionar música 🔒</div>
+      <div class="form-row">
+        <div class="field"><label>ID da Playlist</label><input id="pl_id" type="number" placeholder="1"></div>
+        <div class="field"><label>ID da Música</label><input id="pl_song_id" type="number" placeholder="1"></div>
+      </div>
+      <button class="btn btn-primary" onclick="addToPlaylist()">Adicionar à Playlist</button>
+      <div id="add_pl_response" class="response-box" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- ══ DOCS ══ -->
+  <div class="page" id="page-docs">
+    <h2>Endpoints <small>Referência</small></h2>
+
+    <div class="card">
+      <div class="card-title">🔐 Autenticação</div>
+      <table class="endpoint-table">
+        <tr><th>Método</th><th>Rota</th><th>Descrição</th><th>Auth?</th></tr>
+        <tr><td><span class="method post">POST</span></td><td class="route">/auth/register</td><td class="desc">Cadastrar novo usuário</td><td class="auth">—</td></tr>
+        <tr><td><span class="method post">POST</span></td><td class="route">/auth/login</td><td class="desc">Login e receber token JWT</td><td class="auth">—</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🎵 Músicas</div>
+      <table class="endpoint-table">
+        <tr><th>Método</th><th>Rota</th><th>Descrição</th><th>Auth?</th></tr>
+        <tr><td><span class="method get">GET</span></td><td class="route">/songs</td><td class="desc">Listar músicas (filtros: q, genre, artist)</td><td class="auth">—</td></tr>
+        <tr><td><span class="method get">GET</span></td><td class="route">/songs/:id</td><td class="desc">Detalhe de uma música</td><td class="auth">—</td></tr>
+        <tr><td><span class="method post">POST</span></td><td class="route">/songs</td><td class="desc">Adicionar música</td><td class="auth">🔒 JWT</td></tr>
+        <tr><td><span class="method delete">DELETE</span></td><td class="route">/songs/:id</td><td class="desc">Remover música (somente dono)</td><td class="auth">🔒 JWT</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📂 Playlists</div>
+      <table class="endpoint-table">
+        <tr><th>Método</th><th>Rota</th><th>Descrição</th><th>Auth?</th></tr>
+        <tr><td><span class="method get">GET</span></td><td class="route">/playlists</td><td class="desc">Listar todas as playlists</td><td class="auth">—</td></tr>
+        <tr><td><span class="method post">POST</span></td><td class="route">/playlists</td><td class="desc">Criar playlist</td><td class="auth">🔒 JWT</td></tr>
+        <tr><td><span class="method post">POST</span></td><td class="route">/playlists/:id/songs</td><td class="desc">Adicionar música à playlist</td><td class="auth">🔒 JWT</td></tr>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  const API = 'http://localhost:5000';
+  let token = localStorage.getItem('pysound_token') || '';
+
+  function updateTokenDisplay() {
+    const el = document.getElementById('tokenDisplay');
+    if (token) {
+      el.textContent = '🔒 Autenticado: ' + token.substring(0, 30) + '...';
+      el.classList.add('active');
+    } else {
+      el.textContent = '🔓 Não autenticado';
+      el.classList.remove('active');
+    }
+  }
+
+  function showPage(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById('page-' + name).classList.add('active');
+    event.currentTarget.classList.add('active');
+    if (name === 'dashboard') loadDashboard();
+  }
+
+  function showResponse(elId, data, isError = false) {
+    const el = document.getElementById(elId);
+    el.style.display = 'block';
+    el.textContent = JSON.stringify(data, null, 2);
+    el.className = 'response-box' + (isError ? ' error' : '');
+  }
+
+  async function api(method, path, body = null, useToken = false) {
+    const headers = { 'Content-Type': 'application/json' };
+    if (useToken && token) headers['Authorization'] = 'Bearer ' + token;
+    const opts = { method, headers };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(API + path, opts);
+    return { status: res.status, data: await res.json() };
+  }
+
+  async function register() {
+    const r = await api('POST', '/auth/register', {
+      username: document.getElementById('reg_user').value,
+      email: document.getElementById('reg_email').value,
+      password: document.getElementById('reg_pass').value
+    });
+    showResponse('reg_response', r.data, r.status >= 400);
+  }
+
+  async function login() {
+    const r = await api('POST', '/auth/login', {
+      email: document.getElementById('login_email').value,
+      password: document.getElementById('login_pass').value
+    });
+    if (r.data.token) {
+      token = r.data.token;
+      localStorage.setItem('pysound_token', token);
+      updateTokenDisplay();
+    }
+    showResponse('login_response', r.data, r.status >= 400);
+  }
+
+  function logout() {
+    token = '';
+    localStorage.removeItem('pysound_token');
+    updateTokenDisplay();
+  }
+
+  async function searchSongs() {
+    const params = new URLSearchParams();
+    const q = document.getElementById('search_q').value;
+    const genre = document.getElementById('search_genre').value;
+    const artist = document.getElementById('search_artist').value;
+    if (q) params.append('q', q);
+    if (genre) params.append('genre', genre);
+    if (artist) params.append('artist', artist);
+
+    const r = await api('GET', '/songs?' + params.toString());
+    const container = document.getElementById('songs_list');
+    container.innerHTML = '';
+
+    if (!r.data.songs || r.data.songs.length === 0) {
+      container.innerHTML = '<div style="color:var(--muted);font-family:var(--mono);font-size:0.8rem">Nenhuma música encontrada.</div>';
+      return;
+    }
+
+    r.data.songs.forEach((s, i) => {
+      container.innerHTML += `
+        <div class="song-item">
+          <div class="song-num">${i + 1}</div>
+          <div class="song-info">
+            <h4>${s.title}</h4>
+            <p>${s.artist}${s.album ? ' · ' + s.album : ''}</p>
+          </div>
+          <div class="song-genre">${s.genre || '—'}</div>
+          <div class="song-dur">${s.duration ? Math.floor(s.duration/60)+':'+String(s.duration%60).padStart(2,'0') : '—'}</div>
+        </div>`;
+    });
+  }
+
+  async function addSong() {
+    const r = await api('POST', '/songs', {
+      title: document.getElementById('song_title').value,
+      artist: document.getElementById('song_artist').value,
+      album: document.getElementById('song_album').value,
+      genre: document.getElementById('song_genre').value,
+      duration: parseInt(document.getElementById('song_duration').value) || null,
+      url: document.getElementById('song_url').value
+    }, true);
+    showResponse('add_song_response', r.data, r.status >= 400);
+  }
+
+  async function deleteSong() {
+    const id = document.getElementById('del_song_id').value;
+    const r = await api('DELETE', '/songs/' + id, null, true);
+    showResponse('del_song_response', r.data, r.status >= 400);
+  }
+
+  async function getPlaylists() {
+    const r = await api('GET', '/playlists');
+    const container = document.getElementById('playlists_list');
+
+    if (!r.data.playlists || r.data.playlists.length === 0) {
+      container.innerHTML = '<div style="color:var(--muted);font-family:var(--mono);font-size:0.8rem">Nenhuma playlist.</div>';
+      return;
+    }
+
+    container.innerHTML = r.data.playlists.map(p => `
+      <div class="song-item" style="grid-template-columns:auto 1fr auto">
+        <div class="song-num">📂</div>
+        <div class="song-info">
+          <h4>${p.name}</h4>
+          <p>${p.description || 'Sem descrição'} · por ${p.owner}</p>
+        </div>
+        <div class="song-genre">${p.total_songs} música${p.total_songs !== 1 ? 's' : ''}</div>
+      </div>`).join('');
+  }
+
+  async function createPlaylist() {
+    const r = await api('POST', '/playlists', {
+      name: document.getElementById('pl_name').value,
+      description: document.getElementById('pl_desc').value
+    }, true);
+    showResponse('create_pl_response', r.data, r.status >= 400);
+  }
+
+  async function addToPlaylist() {
+    const id = document.getElementById('pl_id').value;
+    const r = await api('POST', '/playlists/' + id + '/songs', {
+      song_id: parseInt(document.getElementById('pl_song_id').value)
+    }, true);
+    showResponse('add_pl_response', r.data, r.status >= 400);
+  }
+
+  async function loadDashboard() {
+    try {
+      const [songs, playlists] = await Promise.all([
+        api('GET', '/songs'),
+        api('GET', '/playlists')
+      ]);
+
+      document.getElementById('statSongs').textContent = songs.data.total || 0;
+      document.getElementById('statPlaylists').textContent =
+        (playlists.data.playlists || []).length;
+      document.getElementById('statStatus').textContent = '🟢';
+
+      const container = document.getElementById('dashSongList');
+      container.innerHTML = '';
+      (songs.data.songs || []).slice(0, 5).forEach((s, i) => {
+        container.innerHTML += `
+          <div class="song-item">
+            <div class="song-num">${i + 1}</div>
+            <div class="song-info">
+              <h4>${s.title}</h4>
+              <p>${s.artist}${s.album ? ' · ' + s.album : ''}</p>
+            </div>
+            <div class="song-genre">${s.genre || '—'}</div>
+            <div class="song-dur">${s.duration ? Math.floor(s.duration/60)+':'+String(s.duration%60).padStart(2,'0') : '—'}</div>
+          </div>`;
+      });
+    } catch {
+      document.getElementById('statStatus').textContent = '🔴';
+    }
+  }
+
+  updateTokenDisplay();
+  loadDashboard();
+</script>
+</body>
+</html>
