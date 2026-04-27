@@ -369,6 +369,47 @@
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.player-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 0.85rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  z-index: 200;
+}
+
+.player-info { flex: 1; }
+.player-info h4 { font-size: 0.9rem; font-weight: 700; }
+.player-info p  { font-size: 0.75rem; color: var(--muted); font-family: var(--mono); }
+
+.player-bar audio {
+  flex: 2;
+  height: 36px;
+  filter: invert(1) hue-rotate(90deg);  /* deixa o player verde */
+}
+
+.btn-play {
+  background: var(--accent);
+  border: none;
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-play:hover { transform: scale(1.1); }
+
+main { padding-bottom: 90px; } /* espaço pro player fixo */
 </style>
 </head>
 <body>
@@ -634,37 +675,42 @@
     updateTokenDisplay();
   }
 
-  async function searchSongs() {
-    const params = new URLSearchParams();
-    const q = document.getElementById('search_q').value;
-    const genre = document.getElementById('search_genre').value;
-    const artist = document.getElementById('search_artist').value;
-    if (q) params.append('q', q);
-    if (genre) params.append('genre', genre);
-    if (artist) params.append('artist', artist);
+async function searchSongs() {
+  const params = new URLSearchParams();
+  const q      = document.getElementById('search_q').value;
+  const genre  = document.getElementById('search_genre').value;
+  const artist = document.getElementById('search_artist').value;
+  if (q)      params.append('q', q);
+  if (genre)  params.append('genre', genre);
+  if (artist) params.append('artist', artist);
 
-    const r = await api('GET', '/songs?' + params.toString());
-    const container = document.getElementById('songs_list');
-    container.innerHTML = '';
+  const r = await api('GET', '/songs?' + params.toString());
+  const container = document.getElementById('songs_list');
+  container.innerHTML = '';
 
-    if (!r.data.songs || r.data.songs.length === 0) {
-      container.innerHTML = '<div style="color:var(--muted);font-family:var(--mono);font-size:0.8rem">Nenhuma música encontrada.</div>';
-      return;
-    }
-
-    r.data.songs.forEach((s, i) => {
-      container.innerHTML += `
-        <div class="song-item">
-          <div class="song-num">${i + 1}</div>
-          <div class="song-info">
-            <h4>${s.title}</h4>
-            <p>${s.artist}${s.album ? ' · ' + s.album : ''}</p>
-          </div>
-          <div class="song-genre">${s.genre || '—'}</div>
-          <div class="song-dur">${s.duration ? Math.floor(s.duration/60)+':'+String(s.duration%60).padStart(2,'0') : '—'}</div>
-        </div>`;
-    });
+  if (!r.data.songs || r.data.songs.length === 0) {
+    container.innerHTML = '<div style="color:var(--muted);font-family:var(--mono);font-size:0.8rem">Nenhuma música encontrada.</div>';
+    return;
   }
+
+  r.data.songs.forEach((s, i) => {
+    const hasAudio = s.url && s.url.endsWith('.mp3');
+    container.innerHTML += `
+      <div class="song-item">
+        <div class="song-num">${i + 1}</div>
+        <div class="song-info">
+          <h4>${s.title}</h4>
+          <p>${s.artist}${s.album ? ' · ' + s.album : ''}</p>
+        </div>
+        <div class="song-genre">${s.genre || '—'}</div>
+        <div class="song-dur">${s.duration ? Math.floor(s.duration/60)+':'+String(s.duration%60).padStart(2,'0') : '—'}</div>
+        ${hasAudio
+          ? `<button class="btn-play" onclick="playTrack('${s.url}','${s.title}','${s.artist}')" title="Tocar">▶</button>`
+          : `<span style="font-size:0.7rem;color:var(--muted);font-family:var(--mono)">sem áudio</span>`
+        }
+      </div>`;
+  });
+}
 
   async function addSong() {
     const r = await api('POST', '/songs', {
@@ -753,6 +799,27 @@
 
   updateTokenDisplay();
   loadDashboard();
+</script>
+<div class="player-bar" id="playerBar" style="display:none">
+  <button class="btn-play" onclick="document.getElementById('audioEl').paused
+    ? document.getElementById('audioEl').play()
+    : document.getElementById('audioEl').pause()">⏯</button>
+  <div class="player-info">
+    <h4 id="playerTitle">—</h4>
+    <p id="playerArtist">—</p>
+  </div>
+  <audio id="audioEl" controls></audio>
+</div>
+
+<script>
+  function playTrack(url, title, artist) {
+    const audio = document.getElementById('audioEl');
+    document.getElementById('playerTitle').textContent  = title;
+    document.getElementById('playerArtist').textContent = artist;
+    document.getElementById('playerBar').style.display  = 'flex';
+    audio.src = url;
+    audio.play();
+  }
 </script>
 </body>
 </html>
