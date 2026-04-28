@@ -326,7 +326,7 @@ Desenvolvido pela turma de **Técnico em Informática para Internet - TEC.043.00
 Se tiver alguma dúvida durante o processo, me chame no WhatsApp ou abra uma issue no GitHub.
 
 ---
-
+<div align="center">
   
 
 [![Stars](https://img.shields.io/github/stars/MMVonnSeek/pysound?style=social)](https://github.com/MMVonnSeek/pysound/stargazers)
