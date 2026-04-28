@@ -44,7 +44,7 @@ Este projeto foi criado para demonstrar na prática:
 | **Python** | 3.10+ | Linguagem principal |
 | **Flask** | 3.0.0 | Framework web |
 | **Flask-SQLAlchemy** | 3.1.1 | ORM para banco de dados |
-| **Flask-JWT-Extended** | 4.6.0 | Autenticação com tokens JWT |
+| **Flask-JWT-Extended** | 4.7.1 | Autenticação com tokens JWT |
 | **Flask-CORS** | 4.0.0 | Compartilhamento de recursos entre origens |
 | **Werkzeug** | 3.0.1 | Hash de senhas e utilitários |
 | **SQLite** | - | Banco de dados leve |
