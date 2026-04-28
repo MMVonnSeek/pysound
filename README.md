@@ -314,5 +314,7 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](https://LICENSE)
 Desenvolvido pela turma de **Técnico em Informática para Internet - TEC.043.004** do **SENAI Taguatinga-DF**.
 
 **Instrutor:** Max Muller
+
 **Disciplina:** Codificação para Back-End 
+
 **Ano:** 2026
